@@ -1,58 +1,42 @@
-// import express from 'express'
-// import cors from 'cors'
-// import 'dotenv/config'
-// import connectDB from './configs/mongodb.js'
-// import { clerkWebhooks } from './controllers/webhooks.js'
-
-// //initialize express
-// const app = express()
-
-// //connect to database
-// await connectDB()
-
-// //Middleware
-// app.use(cors())
-
-// //Routes 
-// app.get('/', (req, res)=> res.send("API Working"))
-// app.post('/clerk', express.json(), clerkWebhooks)
-
-// //Port
-// const PORT = process.env.PORT || 5000
-
-// app.listen(PORT, ()=>{
-//     console.log(`Server is running on port ${PORT}`)
-// })
-
 import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
-import connectDB from './configs/mongodb.js'
-import { clerkWebhooks } from './controllers/webhooks.js'
+import connectDB from './configs/mongodb.js';
+import { clerkWebhooks, stripeWebhooks} from './controllers/webhooks.js';
+import educatorRouter from './routes/educatorRoutes.js';
+import { clerkMiddleware } from '@clerk/express';
+import connectCloudinay from './configs/cloudinary.js';
+import courseRouter from './routes/courseRoute.js';
+import userRouter from './routes/userRoutes.js';
 
-//initialize express
-const app = express()
+// // initialize express 
+const app = express();
 
-//connect to database
-await connectDB()
 
-//Middleware
-app.use(cors())
+// connect to db
+await connectDB();
+await connectCloudinay();
 
-// ⛔ IMPORTANT: RAW BODY ONLY FOR WEBHOOK ROUTE
-app.post('/clerk',
-    express.raw({ type: "*/*" }),   // <-- FIXED
-    clerkWebhooks
-)
 
-// JSON for all other routes
-app.use(express.json())
+// // middleware
+app.use(cors());
+app.use(clerkMiddleware())
 
-//Routes 
-app.get('/', (req, res)=> res.send("API Working"))
 
-//Port
-const PORT = process.env.PORT || 5000
-app.listen(PORT, ()=>{
-    console.log(`Server is running on port ${PORT}`)
+// // Routes
+app.get('/', (req,res)=>{res.send("API is working")})
+app.post('/clerk', express.json(), clerkWebhooks)
+app.use('/api/educator', express.json(), educatorRouter);
+app.use('/api/course', express.json(), courseRouter);
+app.use('/api/user', express.json(), userRouter);
+app.post('/stripe', express.raw({type: 'application/json'}), stripeWebhooks);
+
+
+
+// // port
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, ()=> {
+    console.log(`Server is running on ${PORT}`);
+    
 })
