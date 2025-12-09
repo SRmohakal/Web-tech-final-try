@@ -43,8 +43,8 @@ app.post('/clerk', express.json(), async (req, res, next) => {
 export default app
 
 // Also support local development
-if (import.meta.url === `file://${process.argv[1]}`) {
-    const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000
+if (!process.env.VERCEL) {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`)
     })
