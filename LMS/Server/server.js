@@ -39,6 +39,12 @@ app.post('/clerk', express.json(), async (req, res, next) => {
     }
 })
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Global error handler:', err)
+    res.status(500).json({ error: 'Internal server error' })
+})
+
 // Export for Vercel serverless
 export default app
 

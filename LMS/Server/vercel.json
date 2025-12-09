@@ -1,14 +1,10 @@
-  {
+{
     "version": 2,
+    "buildCommand": "npm ci",
     "builds": [
         {
             "src": "server.js",
-            "use": "@vercel/node",
-            "config": {
-                "includeFiles": [
-                    "dist/**"
-                ]
-            }
+            "use": "@vercel/node"
         }
     ],
     "routes": [
@@ -16,5 +12,8 @@
             "src": "/(.*)",
             "dest": "server.js"
         }
-    ]
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    }
 }
