@@ -7,19 +7,45 @@ import { clerkWebhooks } from './controllers/webhooks.js'
 //initialize express
 const app = express()
 
-//connect to database
-await connectDB()
-
 //Middleware
 app.use(cors())
 
+// Connection state tracking
+let dbConnected = false
+
+// Connect to database on first request (lazy connection)
+const ensureDBConnection = async () => {
+    if (!dbConnected) {
+        try {
+            await connectDB()
+            dbConnected = true
+        } catch (err) {
+            console.error('Database connection failed:', err.message)
+            throw err
+        }
+    }
+}
+
 //Routes 
 app.get('/', (req, res)=> res.send("API Working"))
-app.post('/clerk', express.json(), clerkWebhooks)
 
-//Port
-const PORT = process.env.PORT || 5000
-
-app.listen(PORT, ()=>{
-    console.log(`Server is running on port ${PORT}`)
+app.post('/clerk', express.json(), async (req, res, next) => {
+    try {
+        await ensureDBConnection()
+        clerkWebhooks(req, res, next)
+    } catch (err) {
+        console.error('Clerk webhook error:', err)
+        res.status(500).json({ error: 'Internal server error' })
+    }
 })
+
+// Export for Vercel serverless
+export default app
+
+// Also support local development
+if (import.meta.url === `file://${process.argv[1]}`) {
+    const PORT = process.env.PORT || 5000
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`)
+    })
+}
